@@ -1,5 +1,5 @@
-// import AppError from '../errors/AppError';
-import { getCustomRepository, getRepository } from 'typeorm';
+import AppError from '../errors/AppError';
+import { getCustomRepository, getRepository, TransactionRepository } from 'typeorm';
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import Category from '../models/Category';
 import Transaction from '../models/Transaction';
@@ -39,6 +39,14 @@ class CreateTransactionService {
 
     // Cria conexão com Transaction
     const transactionsRepository = getCustomRepository(TransactionsRepository);
+
+    // Traz total do saldo da transação
+    const { total } = await transactionsRepository.getBalance();
+
+    // Verifica se é outcome e se o saldo é suficiente
+    if (type === 'outcome' && total < value) {
+      throw new AppError('You dont have enought money');
+    }
 
     // Cria nova transaction
     const transaction = transactionsRepository.create({
